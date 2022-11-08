@@ -18,11 +18,13 @@ class Facility:
         self.service.append(demand)
         demand.facility = self
 
+# split the x and y coordinates into two list. used for plotting.
 def Split_Position(points: list):
     x_pos = [point.position[0] for point in points]
     y_pos = [point.position[1] for point in points]
     return x_pos, y_pos
 
+# split x and y coordinates into two list for all demands, that a facility serves. used for plotting.
 def Get_Service_Connections(facility: Facility) -> list:
     x_pos = [(point.position[0], facility.position[0]) for point in facility.service]
     y_pos = [(point.position[1], facility.position[1]) for point in facility.service]
@@ -37,12 +39,12 @@ class Draw:
     def Plot(self, show_rel: bool = False):
         # Preparing the plot.
         figure, axes = plt.subplots()
-        figure.canvas.set_window_title("Facility Location")
         figure.set_size_inches(10, 7)
+        figure.canvas.set_window_title("Facility Location")
         plt.title(f"Area:{self.area}\nDemand:{len(self.demands)} - Facilities: {len(self.facilities)}")
-        plt.grid(True, which="both")
+        
         axes.set_aspect("equal")
-
+        plt.grid(True, which="both")
         plt.xlim([-1, self.area[0] + 1])
         plt.ylim([-1, self.area[1] + 1])
 
@@ -57,20 +59,26 @@ class Draw:
         # if you want to see which facility serves which demand, set it to True.
         if show_rel:
             for facility in self.facilities:
+                # get the coordinates for all the demands served.
                 x_service, y_service = Get_Service_Connections(facility)
+
                 for i in range(0, len(x_service)):
                     plt.plot(x_service[i], y_service[i], color="grey", zorder=-2)
 
         plt.show()
 
+
 """ Functions """
 
+# create a random Demand within the defined realm. 
 def Randomize_Demand(area: tuple) -> Demand:
     pos_demand = [rd.randint(0, area[i]) for i in range(0, len(area))]
     return Demand(tuple(pos_demand))
 
+# generate set_size many random Demands.
 def Generate_Stream(set_size: int, area: tuple) -> list:
     return [Randomize_Demand(area) for i in range(0, set_size)]
+
 
 if __name__ == "__main__":
     test_demand = Demand((3,4))
