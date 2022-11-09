@@ -70,27 +70,74 @@ def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int 
 
 
 """ Cost Function """
-
+# Calculates formula: |F|*f + \sum d(F, u)
+# where F: facilities, f: opening costs, d(F,u): distance from demand to the closest facility.
 def Calculate_Costs(facilities: list, facility_cost: int) -> float:
     total_cost = 0
     for facility in facilities:
         total_cost += facility_cost
+
         for demand in facility.service:
             total_cost += Euclidean_Norm(facility.position, demand.position)
     
     return np.around(total_cost, decimals=2)
 
 
+""" Test Function """
+
+def Sample_Size(area: tuple, frac: float = 0.1) -> int:
+    upper_bound = np.around((area[0] * area[1])*frac)
+    if upper_bound <= 2:
+        upper_bound = 2
+    return rd.randint(1, upper_bound)
+
+# options = ["meyerson", "q_meyerson", "all"]
+def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, options: str = "all", q: float = 0.5) -> None:
+    # creating the instances
+    for i in range(0, iterations):
+        sample_size = Sample_Size(area, 0.05)
+        input_stream = Generate_Stream(sample_size, area)
+
+        if options == "all":
+            test_meyerson = Meyerson_Algorithm_Online(input_stream, costs)
+            test_q_meyerson = q_Meyerson_Algorithm_Online(q, input_stream, costs)
+
+            costs_meyerson = Calculate_Costs(test_meyerson, costs)
+            costs_q_meyerson = Calculate_Costs(test_q_meyerson, costs)
+
+            print(f"--> Demand: {len(input_stream)}")
+            print(f"Meyerson:\t# Facilities: {len(test_meyerson)} for a cost of {costs_meyerson}.")
+            print(f"q-Meyerson:\t# Facilities: {len(test_q_meyerson)} for a cost of {costs_q_meyerson}.")
+            print(f"---> {costs_q_meyerson <= costs_meyerson}\n")
+        else:
+            if options == "meyerson":
+                test_facilities = Meyerson_Algorithm_Online(input_stream, costs)
+            elif options == "q_meyerson":
+                test_facilities = q_Meyerson_Algorithm_Online(q, input_stream, costs)
+            else:
+                raise Exception(f"\n\tOption '{options}' is not valid.")
+            
+            total_costs = Calculate_Costs(test_facilities, costs)
+            
+            print(f"--> Demand: {len(input_stream)}")
+            print(f"Result:\t# Facilities: {len(test_facilities)} for a cost of {total_costs}.\n")
+        
+        
 if __name__ == "__main__":
-    test_area = (100, 20)
-    test_stream = Generate_Stream(35, test_area)
+    test_area = (25, 25)
+    test_cost = 10
+    test_size = 5
 
-    test_meyerson = Meyerson_Algorithm_Online(test_stream, 30)
-    test_cost = Calculate_Costs(test_meyerson, 30)
-    result = Draw(test_area, test_stream, test_meyerson, test_cost)
-    result.Plot(True)
+    #test_stream = Generate_Stream(10, test_area)
 
-    test_q_meyerson = q_Meyerson_Algorithm_Online(0.5, test_stream, 30)
-    test_q_cost = Calculate_Costs(test_q_meyerson, 30)
-    q_result = Draw(test_area, test_stream, test_q_meyerson, test_q_cost)
-    q_result.Plot(True)
+    #test_meyerson = Meyerson_Algorithm_Online(test_stream, test_cost)
+    #test_cost = Calculate_Costs(test_meyerson, test_cost)
+    #result = Draw(test_area, test_stream, test_meyerson, test_cost)
+    #result.Plot(True)
+
+    #test_q_meyerson = q_Meyerson_Algorithm_Online(0.5, test_stream, test_cost)
+    #test_q_cost = Calculate_Costs(test_q_meyerson, test_cost)
+    #q_result = Draw(test_area, test_stream, test_q_meyerson, test_q_cost)
+    #q_result.Plot(True)
+
+    Test_Meyerson_Alg(10, test_area, test_cost, "all")
