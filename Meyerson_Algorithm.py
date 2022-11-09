@@ -69,14 +69,28 @@ def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int 
     return facilities_list
 
 
+""" Cost Function """
+
+def Calculate_Costs(facilities: list, facility_cost: int) -> float:
+    total_cost = 0
+    for facility in facilities:
+        total_cost += facility_cost
+        for demand in facility.service:
+            total_cost += Euclidean_Norm(facility.position, demand.position)
+    
+    return np.around(total_cost, decimals=2)
+
+
 if __name__ == "__main__":
     test_area = (100, 20)
     test_stream = Generate_Stream(35, test_area)
 
     test_meyerson = Meyerson_Algorithm_Online(test_stream, 30)
-    result = Draw(test_area, test_stream, test_meyerson)
-    #result.Plot(True)
+    test_cost = Calculate_Costs(test_meyerson, 30)
+    result = Draw(test_area, test_stream, test_meyerson, test_cost)
+    result.Plot(True)
 
     test_q_meyerson = q_Meyerson_Algorithm_Online(0.5, test_stream, 30)
-    q_result = Draw(test_area, test_stream, test_q_meyerson)
-    #q_result.Plot(True)
+    test_q_cost = Calculate_Costs(test_q_meyerson, 30)
+    q_result = Draw(test_area, test_stream, test_q_meyerson, test_q_cost)
+    q_result.Plot(True)
