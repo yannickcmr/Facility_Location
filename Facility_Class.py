@@ -31,17 +31,23 @@ def Get_Service_Connections(facility: Facility) -> list:
     return x_pos, y_pos
 
 class Draw:
-    def __init__(self, area: tuple, demands: list, facilites: list) -> None:
+    def __init__(self, area: tuple, demands: list, facilites: list, costs: float = 0) -> None:
         self.area = area
         self.demands = demands
         self.facilities = facilites
+        self.costs = costs
     
     def Plot(self, show_rel: bool = False):
+        # formating the title.
+        title_str = f"Area:{self.area}\nDemand:{len(self.demands)} --- Facilities: {len(self.facilities)}"
+        if self.costs > 0: 
+            title_str += f" --- Costs: {self.costs}"
+        
         # Preparing the plot.
         figure, axes = plt.subplots()
         figure.set_size_inches(10, 7)
         figure.canvas.set_window_title("Facility Location")
-        plt.title(f"Area:{self.area}\nDemand:{len(self.demands)} - Facilities: {len(self.facilities)}")
+        plt.title(title_str)
         
         axes.set_aspect("equal")
         plt.grid(True, which="both")
