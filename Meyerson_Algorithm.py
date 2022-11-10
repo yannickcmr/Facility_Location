@@ -68,11 +68,51 @@ def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int 
     return facilities_list
 
 """ Clustering """
+
+def Center_Range(demand_set_size: int, frac: tuple) -> tuple:
+   return rd.randint(int(demand_set_size * frac[0]), int(demand_set_size * frac[1]))
+
 # returns a random starting position.
 def Randomize_Center(area: tuple) -> tuple:
     return (rd.randint(0, area[0]), rd.randint(0, area[1]))
 
-# to be continued.
+def Find_Nearest_Center(demand: Demand, centers: list) -> tuple:
+    distances = [Euclidean_Norm(demand.position, center) for center in centers]
+    nearest_center = np.argmin(distances)
+    return centers[nearest_center]
+
+def Calculate_Mean_Center(demands: list) -> tuple:
+    len_ = len(demands)
+    x_val = [demand.position[0] for demand in demands]
+    y_val = [demand.position[1] for demand in demands]
+    return (np.around(np.sum(x_val) / len_, decimals=3), np.around(np.sum(y_val) / len_, decimals=3))
+
+def Update_Centers(clusters: list) -> list:
+    clusters = [cluster for cluster in clusters if len(cluster) > 0]
+    return [Calculate_Mean_Center(cluster) for cluster in clusters]
+
+def Assign_Demand_to_Center(center: tuple, demands: list) -> list:
+    facility = Facility(center, demands[0])
+    for demand in demands[1:]:
+        facility.Add_Service(demand)
+    return facility
+
+def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5, frac: tuple = (0.1, 0.6)):
+    centers = [Randomize_Center(area) for i in range(0, Center_Range(len(demand_list), frac))]
+
+    for i in range(0, iteration):
+        clusters = [[] for center in centers]
+
+        for demand in demand_list:
+            nearest_center = Find_Nearest_Center(demand, centers)
+            index = centers.index(nearest_center)
+            clusters[index].append(demand)
+
+        centers = Update_Centers(clusters)
+
+    return [Assign_Demand_to_Center(center, cluster) for center, cluster in zip(centers, clusters)]
+
+    
 
 
 """ Cost Function """
@@ -107,6 +147,7 @@ def Print_Results(results: list, option: str) -> None:
             print(f"--> Demand: {item[0]}")
             print(f"meyerson: \t{item[1][0]} Facilities \t{item[1][1]} Costs.")
             print(f"q-meyerson: \t{item[2][0]} Facilities \t{item[2][1]} Costs.")
+            print(f"lloyd: \t\t{item[3][0]} Facilities \t{item[3][1]} Costs.")
             print(f"--> {cache}\n")
     
         print(f"Overall performance: {rating/len(results)}")
@@ -115,7 +156,6 @@ def Print_Results(results: list, option: str) -> None:
         for item in results:
             print(f"--> Demand: {item[0]}")
             print(f"{option}: \t{item[1][0]} Facilities \t{item[1][1]} Costs.\n")
-
 
 # options = ["meyerson", "q_meyerson", "all"]
 def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "all", q: float = 0.5, timing: bool = False) -> None:
@@ -131,15 +171,17 @@ def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "a
             # calculate facilities.
             meyerson = Meyerson_Algorithm_Online(input_stream, costs)
             q_meyerson = q_Meyerson_Algorithm_Online(q, input_stream, costs)
+            lloyd = Lloyd_Clustering(area, input_stream)
 
             # calculate costs.
             costs_meyerson = Calculate_Costs(meyerson, costs)
             costs_q_meyerson = Calculate_Costs(q_meyerson, costs)
+            costs_lloyd = Calculate_Costs(lloyd, costs)
 
             # append results
-            results_alg.append([sample_size, [len(meyerson), costs_meyerson], [len(q_meyerson), costs_q_meyerson]])
+            results_alg.append([sample_size, [len(meyerson), costs_meyerson], [len(q_meyerson), costs_q_meyerson], [len(lloyd), costs_lloyd]])
 
-    elif (option == "meyerson") or (option == "q_meyerson"):
+    elif (option == "meyerson") or (option == "q_meyerson") or (option == "lloyd"):
         for i in range(0, iterations):
             # generate test case.
             sample_size = Sample_Size(area, 0.05)
@@ -150,6 +192,8 @@ def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "a
                 test_facilities = Meyerson_Algorithm_Online(input_stream, costs)
             elif option == "q_meyerson":
                 test_facilities = q_Meyerson_Algorithm_Online(q, input_stream, costs)
+            elif option == "lloyd":
+                test_facilities = Lloyd_Clustering(area, input_stream, iteration=10)
 
             # calculate costs and append result to results_alg
             total_costs = Calculate_Costs(test_facilities, costs)
@@ -168,7 +212,7 @@ if __name__ == "__main__":
     test_facility_cost = 27
     test_stream_size = 20
     test_q_value = 0.5
-    test_iterations = 25
+    test_iterations = 10
 
     # generate random test stream.
     test_stream = Generate_Stream(test_stream_size, test_area)
@@ -187,11 +231,8 @@ if __name__ == "__main__":
 
     Test_Meyerson_Alg(test_iterations, test_area, test_facility_cost, timing = True)
 
-    #Test_Meyerson_Alg(10, test_area, test_facility_cost, "all")
-    #result = Lloyd_Cluster_Algorithm(test_area, test_stream, 10)
-    #print(result)
-    #cost = result[0]
-    #test_centers = []
-    #for item in result[1]:
-    #    cache = Facility(item[0], item[1])
-    #    test_centers.append()
+    #test_lloyd = Lloyd_Clustering(test_area, test_stream)
+    #cost_lloyd = Calculate_Costs(test_lloyd, test_facility_cost)
+    #lloyd_result = Draw(test_area, test_stream, test_lloyd, cost_lloyd)
+    #lloyd_result.Plot(True)
+
