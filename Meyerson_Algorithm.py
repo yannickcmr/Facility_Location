@@ -5,9 +5,12 @@ from Facility_Class import Facility, Demand, Draw, Generate_Stream
 
 """ Helper Functions """
 
+def Round(values: float, decimals: int) -> float:
+    return np.around(values, decimals=decimals)
+
 # calculates the distance (ordinary norm) of two points and rounds it to 4 decimal places.
 def Euclidean_Norm(point_1, point_2) -> float:
-    return np.around(np.linalg.norm(np.array(point_1) - np.array(point_2)), decimals=4)
+    return Round(np.linalg.norm(np.array(point_1) - np.array(point_2)), 4)
 
 # find the closest facility based on the norm. returns the distance and the facility.
 def Find_Nearest_Facility(demand: Demand, facility_list: list):
@@ -19,12 +22,8 @@ def Find_Nearest_Facility(demand: Demand, facility_list: list):
     return np.min(norm), facility_list[np.argmin(norm)]
 
 # calculates the relative distance based on the cost of opening a new facility.
-def Get_Probability(distance: float, cost: int) -> float:
-    relative_distance = np.around(distance/cost, decimals=3)
-    return min(relative_distance, 1)
-
 def q_Get_Probability(q, distance: float, cost: int):
-    relative_distance = np.around(distance/cost, decimals=3)
+    relative_distance = Round(distance/cost, 3)
     relative_distance = q*relative_distance
     return min(relative_distance, 1)
 
@@ -39,7 +38,7 @@ def Meyerson_Algorithm_Online(demand_list: list, facility_cost: int = 1):
     for demand in demand_list:
         # calculate the relevent values
         norm, next_facility = Find_Nearest_Facility(demand, facilities_list)
-        probability_facility = Get_Probability(norm, facility_cost)
+        probability_facility = q_Get_Probability(1, norm, facility_cost)
 
         if Flip_Coin(probability_facility):
             # opens up a new facility.
@@ -85,7 +84,7 @@ def Calculate_Mean_Center(demands: list) -> tuple:
     len_ = len(demands)
     x_val = [demand.position[0] for demand in demands]
     y_val = [demand.position[1] for demand in demands]
-    return (np.around(np.sum(x_val) / len_, decimals=3), np.around(np.sum(y_val) / len_, decimals=3))
+    return (Round(np.sum(x_val) / len_, 3), Round(np.sum(y_val) / len_, 3))
 
 def Update_Centers(clusters: list) -> list:
     clusters = [cluster for cluster in clusters if len(cluster) > 0]
@@ -126,13 +125,13 @@ def Calculate_Costs(facilities: list, facility_cost: int) -> float:
         for demand in facility.service:
             total_cost += Euclidean_Norm(facility.position, demand.position)
     
-    return np.around(total_cost, decimals=2)
+    return Round(total_cost, 2)
 
 
 """ Test Function """
 
 def Sample_Size(area: tuple, frac: float = 0.1) -> int:
-    upper_bound = np.around((area[0] * area[1])*frac)
+    upper_bound = Round((area[0] * area[1])*frac, 0)
     if upper_bound <= 2:
         upper_bound = 2
     return rd.randint(1, upper_bound)
@@ -164,6 +163,7 @@ def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "a
     # creating the instances
     if option == "all":
         for i in range(0, iterations):
+            if timing: iter_start = perf_counter()
             # generate test case.
             sample_size = Sample_Size(area, 0.05)
             input_stream = Generate_Stream(sample_size, area)
@@ -172,11 +172,14 @@ def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "a
             meyerson = Meyerson_Algorithm_Online(input_stream, costs)
             q_meyerson = q_Meyerson_Algorithm_Online(q, input_stream, costs)
             lloyd = Lloyd_Clustering(area, input_stream)
+            if timing: iter_facilities_time = perf_counter()
 
             # calculate costs.
             costs_meyerson = Calculate_Costs(meyerson, costs)
             costs_q_meyerson = Calculate_Costs(q_meyerson, costs)
             costs_lloyd = Calculate_Costs(lloyd, costs)
+            if timing: 
+                print(f"{len(input_stream)}\t{Round(iter_facilities_time - iter_start, 5)}\t\t{Round(perf_counter() - iter_facilities_time, 5)}")
 
             # append results
             results_alg.append([sample_size, [len(meyerson), costs_meyerson], [len(q_meyerson), costs_q_meyerson], [len(lloyd), costs_lloyd]])
@@ -207,7 +210,7 @@ def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "a
     print(f"Total time: {end - start}")
 
 if __name__ == "__main__":
-    # test options.
+    """ test options """
     test_area = (100, 100)
     test_facility_cost = 27
     test_stream_size = 20
