@@ -37,11 +37,11 @@ class Draw:
         self.facilities = facilites
         self.costs = costs
     
-    def Plot(self, show_rel: bool = False):
+    def Plot(self, show_rel: bool = False, save: str = None):
         # formating the title.
         title_str = f"Area:{self.area}\nDemand:{len(self.demands)} --- Facilities: {len(self.facilities)}"
         if self.costs > 0: 
-            title_str += f" --- Costs: {self.costs}"
+            title_str += f" --- Total Costs: {self.costs}"
         
         # Preparing the plot.
         figure, axes = plt.subplots()
@@ -71,8 +71,9 @@ class Draw:
                 for i in range(0, len(x_service)):
                     plt.plot(x_service[i], y_service[i], color="grey", zorder=-2)
 
+        if save != None: 
+            plt.savefig(save, dpi = 100, bbox_inches='tight')
         plt.show()
-
 
 """ Functions """
 
