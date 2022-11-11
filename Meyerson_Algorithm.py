@@ -75,10 +75,12 @@ def Center_Range(demand_set_size: int, frac: tuple) -> tuple:
 def Randomize_Center(area: tuple) -> tuple:
     return (rd.randint(0, area[0]), rd.randint(0, area[1]))
 
+
 def Find_Nearest_Center(demand: Demand, centers: list) -> tuple:
     distances = [Euclidean_Norm(demand.position, center) for center in centers]
     nearest_center = np.argmin(distances)
     return centers[nearest_center]
+
 
 def Calculate_Mean_Center(demands: list) -> tuple:
     len_ = len(demands)
@@ -86,15 +88,18 @@ def Calculate_Mean_Center(demands: list) -> tuple:
     y_val = [demand.position[1] for demand in demands]
     return (Round(np.sum(x_val) / len_, 3), Round(np.sum(y_val) / len_, 3))
 
+
 def Update_Centers(clusters: list) -> list:
     clusters = [cluster for cluster in clusters if len(cluster) > 0]
     return [Calculate_Mean_Center(cluster) for cluster in clusters]
+
 
 def Assign_Demand_to_Center(center: tuple, demands: list) -> list:
     facility = Facility(center, demands[0])
     for demand in demands[1:]:
         facility.Add_Service(demand)
     return facility
+
 
 def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5, frac: tuple = (0.1, 0.6)):
     centers = [Randomize_Center(area) for i in range(0, Center_Range(len(demand_list), frac))]
@@ -112,7 +117,6 @@ def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5, frac: t
     return [Assign_Demand_to_Center(center, cluster) for center, cluster in zip(centers, clusters)]
 
     
-
 
 """ Cost Function """
 # Calculates formula: |F|*f + \sum d(F, u)
@@ -135,6 +139,7 @@ def Sample_Size(area: tuple, frac: float = 0.1) -> int:
     if upper_bound <= 2:
         upper_bound = 2
     return rd.randint(1, upper_bound)
+
 
 def Print_Results(results: list, option: str) -> None:
     if option == "all":
@@ -209,6 +214,7 @@ def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "a
     Print_Results(results_alg, option)
     print(f"Total time: {end - start}")
 
+
 if __name__ == "__main__":
     """ test options """
     test_area = (100, 100)
@@ -232,10 +238,10 @@ if __name__ == "__main__":
     #q_result = Draw(test_area, test_stream, test_q_meyerson, cost_q_meyerson)
     #q_result.Plot(True)
 
-    Test_Meyerson_Alg(test_iterations, test_area, test_facility_cost, timing = True)
-
+    #print(f"---- Lloyd ----")
     #test_lloyd = Lloyd_Clustering(test_area, test_stream)
     #cost_lloyd = Calculate_Costs(test_lloyd, test_facility_cost)
     #lloyd_result = Draw(test_area, test_stream, test_lloyd, cost_lloyd)
     #lloyd_result.Plot(True)
 
+    Test_Meyerson_Alg(test_iterations, test_area, test_facility_cost, timing = True)
