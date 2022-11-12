@@ -1,5 +1,8 @@
 import random as rd
+import os
 import matplotlib.pyplot as plt
+
+Save_Path = "Test_Meyerson/"
 
 """ Classes """
 
@@ -36,13 +39,13 @@ class Draw:
         self.demands = demands
         self.facilities = facilites
         self.costs = costs
-    
-    def Plot(self, show_rel: bool = False, save: str = None):
+
+    def Generate_Plot(self):
         # formating the title.
         title_str = f"Area:{self.area}\nDemand:{len(self.demands)} --- Facilities: {len(self.facilities)}"
         if self.costs > 0: 
             title_str += f" --- Total Costs: {self.costs}"
-        
+
         # Preparing the plot.
         figure, axes = plt.subplots()
         figure.set_size_inches(10, 7)
@@ -62,18 +65,26 @@ class Draw:
         plt.scatter(x_demand, y_demand , color="black", s=50, zorder=2)
         plt.scatter(x_facilities, y_facilities , color="red", s=50, marker="*", zorder=2)
 
-        # if you want to see which facility serves which demand, set it to True.
-        if show_rel:
-            for facility in self.facilities:
-                # get the coordinates for all the demands served.
-                x_service, y_service = Get_Service_Connections(facility)
+        # plot the lines to see, which facility serves which demand point.
+        for facility in self.facilities:
+            # get the coordinates for all the demands served.
+            x_service, y_service = Get_Service_Connections(facility)
 
-                for i in range(0, len(x_service)):
-                    plt.plot(x_service[i], y_service[i], color="grey", zorder=-2)
+            for i in range(0, len(x_service)):
+                plt.plot(x_service[i], y_service[i], color="grey", zorder=-2)
 
-        if save != None: 
-            plt.savefig(save, dpi = 100, bbox_inches='tight')
+        return plt
+
+    def Plot(self):
+        plt = self.Generate_Plot()
         plt.show()
+
+
+    def Save(self, file_name: str, dpi: int = 300, format: str = "png") -> None:
+        file_name = f"{file_name}.{format}"
+        path = os.path.join(Save_Path, file_name)
+        plt = self.Generate_Plot()
+        plt.savefig(path, dpi = dpi, format = format, bbox_inches = "tight")
 
 """ Functions """
 
@@ -88,12 +99,16 @@ def Generate_Stream(set_size: int, area: tuple) -> list:
 
 
 if __name__ == "__main__":
+    # testing Demand class and generator function.
     test_demand = Demand((3,4))
     test_stream = Generate_Stream(3, (5,5))
 
+    # testing Facility class and method.
     test_facility = Facility((2,3), test_demand)
     for demand in test_stream:
         test_facility.Add_Service(demand)
 
+    # testing Draw class and methods.
     test_draw = Draw((5,5), [test_demand, *test_stream], [test_facility])
-    test_draw.Plot(True)
+    test_draw.Plot()
+    test_draw.Save("test_save")
