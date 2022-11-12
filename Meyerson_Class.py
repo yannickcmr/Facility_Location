@@ -25,19 +25,22 @@ class Meyerson:
             next_facility.Add_Service(demand)
             self.total_cost = np.around(self.total_cost + norm, decimals= 3) 
 
+def Create_Slide_Show(meyerson: Meyerson, demand_list: list, file_name: str = "test_slide_show") -> None:
+    for i, demand in enumerate(demand_list):
+        save_name = f"{file_name}_{i}"
+        meyerson.Add_Demand(demand)
+        Draw(meyerson.area, meyerson.demands, meyerson.facilities, meyerson.total_cost).Save(save_name)
+
 
 
 if __name__ == "__main__":
     save_path = "Test_Meyerson/"
     test_area = (25, 25)
-    test_facility_cost = 20
+    test_facility_cost = 35
     test_q = 1
     test_demand_size = 15
 
     input_stream = Generate_Stream(test_demand_size, test_area)
     test_meyerson = Meyerson(test_area, test_facility_cost, test_q)
 
-    for i, demand in enumerate(input_stream):
-        save_name = os.path.join(save_path, f"meyerson_img_{i}.png")
-        test_meyerson.Add_Demand(demand)
-        #Draw(test_area, test_meyerson.demands, test_meyerson.facilities, test_meyerson.total_cost).Plot(True, save_name)
+    Create_Slide_Show(test_meyerson, input_stream)
