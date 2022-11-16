@@ -68,8 +68,9 @@ def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int 
 
 """ Clustering """
 
-def Center_Range(demand_set_size: int, frac: tuple) -> tuple:
-   return rd.randint(int(demand_set_size * frac[0]), int(demand_set_size * frac[1]))
+# Use the squar root of the amount of facilities.
+def Center_Range(demand_set_size: int) -> int:
+   return int(np.sqrt(demand_set_size))
 
 # returns a random starting position.
 def Randomize_Center(area: tuple) -> tuple:
@@ -101,8 +102,8 @@ def Assign_Demand_to_Center(center: tuple, demands: list) -> list:
     return facility
 
 
-def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5, frac: tuple = (0.1, 0.6)):
-    centers = [Randomize_Center(area) for i in range(0, Center_Range(len(demand_list), frac))]
+def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5):
+    centers = [Randomize_Center(area) for i in range(0, Center_Range(len(demand_list)))]
 
     for i in range(0, iteration):
         clusters = [[] for center in centers]
