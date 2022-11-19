@@ -13,16 +13,16 @@ def Euclidean_Norm(point_1, point_2) -> float:
     return Round(np.linalg.norm(np.array(point_1) - np.array(point_2)), 4)
 
 # find the closest facility based on the norm. returns the distance and the facility.
-def Find_Nearest_Facility(demand: Demand, facility_list: list):
+def Find_Nearest_Facility(demand: Demand, facility_list: list) -> tuple:
     # base case if facility_list is still empty (1. iteration). 
     if len(facility_list) == 0:
-        return 10000, None
+        return (10000, None)
     
     norm = [Euclidean_Norm(demand.position, facility.position) for facility in facility_list]
-    return np.min(norm), facility_list[np.argmin(norm)]
+    return (np.min(norm), facility_list[np.argmin(norm)])
 
 # calculates the relative distance based on the cost of opening a new facility.
-def q_Get_Probability(q, distance: float, cost: int):
+def q_Get_Probability(q, distance: float, cost: int) -> float:
     relative_distance = Round(distance/cost, 3)
     relative_distance = q*relative_distance
     return min(relative_distance, 1)
@@ -33,7 +33,7 @@ def Flip_Coin(prob: float) -> bool:
 
 """ Meyerson's Algorithm """
 
-def Meyerson_Algorithm_Online(demand_list: list, facility_cost: int = 1):
+def Meyerson_Algorithm_Online(demand_list: list, facility_cost: int = 1) -> list:
     facilities_list = []
     for demand in demand_list:
         # calculate the relevent values
@@ -50,7 +50,7 @@ def Meyerson_Algorithm_Online(demand_list: list, facility_cost: int = 1):
     return facilities_list
 
 
-def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int = 1):
+def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int = 1) -> list:
     facilities_list = []
     for demand in demand_list:
         # calculate the relevent values
@@ -102,7 +102,7 @@ def Assign_Demand_to_Center(center: tuple, demands: list) -> list:
     return facility
 
 
-def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5):
+def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5) -> list:
     centers = [Randomize_Center(area) for i in range(0, Center_Range(len(demand_list)))]
 
     for i in range(0, iteration):
@@ -163,7 +163,7 @@ def Print_Results(results: list, option: str) -> None:
             print(f"{option}: \t{item[1][0]} Facilities \t{item[1][1]} Costs.\n")
 
 # options = ["meyerson", "q_meyerson", "all"]
-def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "all", q: float = 0.5, timing: bool = False) -> None:
+def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "all", q: float = 0.5, timing: bool = False) -> list:
     if timing: start = perf_counter()
     results_alg = []
     # creating the instances
@@ -213,7 +213,11 @@ def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "a
     # end of test
     end = perf_counter()
     Print_Results(results_alg, option)
-    print(f"Total time: {end - start}")
+    
+    print(f"Total time: {end - start} sec for {sum([x[0] for x in results_alg])} Demand points.")
+    print(f"Per Demand point time: {Round((end - start)/sum([x[0] for x in results_alg]), 5)}")
+
+    return results_alg
 
 
 if __name__ == "__main__":
@@ -237,7 +241,7 @@ if __name__ == "__main__":
     #test_q_meyerson = q_Meyerson_Algorithm_Online(test_q_value, test_stream, test_facility_cost)
     #cost_q_meyerson = Calculate_Costs(test_q_meyerson, test_facility_cost)
     #q_result = Draw(test_area, test_stream, test_q_meyerson, cost_q_meyerson)
-    #q_result.Plot(True)
+    #q_result.Plot()
 
     #print(f"---- Lloyd ----")
     #test_lloyd = Lloyd_Clustering(test_area, test_stream)
