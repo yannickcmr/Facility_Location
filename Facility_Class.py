@@ -22,16 +22,16 @@ class Facility:
         demand.facility = self
 
 # split the x and y coordinates into two list. used for plotting.
-def Split_Position(points: list):
+def Split_Position(points: list) -> tuple:
     x_pos = [point.position[0] for point in points]
     y_pos = [point.position[1] for point in points]
-    return x_pos, y_pos
+    return (x_pos, y_pos)
 
 # split x and y coordinates into two list for all demands, that a facility serves. used for plotting.
-def Get_Service_Connections(facility: Facility) -> list:
+def Get_Service_Connections(facility: Facility) -> tuple:
     x_pos = [(point.position[0], facility.position[0]) for point in facility.service]
     y_pos = [(point.position[1], facility.position[1]) for point in facility.service]
-    return x_pos, y_pos
+    return (x_pos, y_pos)
 
 class Draw:
     def __init__(self, area: tuple, demands: list, facilites: list, costs: float = 0) -> None:
@@ -40,7 +40,7 @@ class Draw:
         self.facilities = facilites
         self.costs = costs
 
-    def Generate_Plot(self):
+    def Generate_Plot(self) -> plt:
         # formating the title.
         title_str = f"Area:{self.area}\nDemand:{len(self.demands)} --- Facilities: {len(self.facilities)}"
         if self.costs > 0: 
@@ -75,7 +75,7 @@ class Draw:
 
         return plt
 
-    def Plot(self):
+    def Plot(self) -> None:
         plt = self.Generate_Plot()
         plt.show()
 
