@@ -12,7 +12,7 @@ class Meyerson:
         self.demands = []
         self.facilities = []
 
-    def Add_Demand(self, demand: Demand):
+    def Add_Demand(self, demand: Demand) -> None:
         self.demands.append(demand)
 
         norm, next_facility = Find_Nearest_Facility(demand, self.facilities)
