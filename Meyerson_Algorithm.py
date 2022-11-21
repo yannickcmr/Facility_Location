@@ -1,7 +1,7 @@
 import random as rd
 import numpy as np
 from time import perf_counter
-from Facility_Class import Facility, Demand, Draw, Generate_Stream
+from Facility_Class import Facility, Demand, Draw, Draw_Comparison, Generate_Stream
 
 """ Helper Functions """
 
@@ -33,7 +33,7 @@ def Flip_Coin(prob: float) -> bool:
 
 """ Meyerson's Algorithm """
 
-def Meyerson_Algorithm_Online(demand_list: list, facility_cost: int = 1) -> list:
+def Meyerson_Algorithm_Online(demand_list: list, facility_cost: int = 1) -> list[Facility]:
     facilities_list = []
     for demand in demand_list:
         # calculate the relevent values
@@ -50,7 +50,7 @@ def Meyerson_Algorithm_Online(demand_list: list, facility_cost: int = 1) -> list
     return facilities_list
 
 
-def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int = 1) -> list:
+def q_Meyerson_Algorithm_Online(q: float, demand_list: list, facility_cost: int = 1) -> list[Facility]:
     facilities_list = []
     for demand in demand_list:
         # calculate the relevent values
@@ -90,19 +90,19 @@ def Calculate_Mean_Center(demands: list) -> tuple:
     return (Round(np.sum(x_val) / len_, 3), Round(np.sum(y_val) / len_, 3))
 
 
-def Update_Centers(clusters: list) -> list:
+def Update_Centers(clusters: list) -> list[tuple]:
     clusters = [cluster for cluster in clusters if len(cluster) > 0]
     return [Calculate_Mean_Center(cluster) for cluster in clusters]
 
 
-def Assign_Demand_to_Center(center: tuple, demands: list) -> list:
+def Assign_Demand_to_Center(center: tuple, demands: list) -> Facility:
     facility = Facility(center, demands[0])
     for demand in demands[1:]:
         facility.Add_Service(demand)
     return facility
 
 
-def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5) -> list:
+def Lloyd_Clustering(area: tuple, demand_list: list, iteration: int = 5) -> list[Facility]:
     centers = [Randomize_Center(area) for i in range(0, Center_Range(len(demand_list)))]
 
     for i in range(0, iteration):
@@ -146,13 +146,14 @@ def Print_Results(results: list, option: str) -> None:
     if option == "all":
         rating = 0
         for item in results:
+            # compare total costs.
             cache = (item[1][1] > item[2][1])
             if cache: rating += 1
 
             print(f"--> Demand: {item[0]}")
-            print(f"meyerson: \t{item[1][0]} Facilities \t{item[1][1]} Costs.")
-            print(f"q-meyerson: \t{item[2][0]} Facilities \t{item[2][1]} Costs.")
-            print(f"lloyd: \t\t{item[3][0]} Facilities \t{item[3][1]} Costs.")
+            print(f"meyerson: \t{len(item[1][0])} Facilities \t{item[1][1]} Costs.")
+            print(f"q-meyerson: \t{len(item[2][0])} Facilities \t{item[2][1]} Costs.")
+            print(f"lloyd: \t\t{len(item[3][0])} Facilities \t{item[3][1]} Costs.")
             print(f"--> {cache}\n")
     
         print(f"Overall performance: {rating/len(results)}")
@@ -160,62 +161,82 @@ def Print_Results(results: list, option: str) -> None:
     else:
         for item in results:
             print(f"--> Demand: {item[0]}")
-            print(f"{option}: \t{item[1][0]} Facilities \t{item[1][1]} Costs.\n")
+            print(f"{option}: \t{len(item[1][0])} Facilities \t{item[1][1]} Costs.\n")
 
-# options = ["meyerson", "q_meyerson", "all"]
-def Test_Meyerson_Alg(iterations: int, area: tuple, costs: int, option: str = "all", q: float = 0.5, timing: bool = False) -> list:
+
+
+def Test_Algorithm(iterations: int, area: tuple, costs: int, option: str = "meyerson", q: float = 0.5, timing: bool = False) -> list:
+    # options = ["meyerson", "q_meyerson", "lloyd"]
     if timing: start = perf_counter()
     results_alg = []
     # creating the instances
-    if option == "all":
-        for i in range(0, iterations):
-            if timing: iter_start = perf_counter()
-            # generate test case.
-            sample_size = Sample_Size(area, 0.05)
-            input_stream = Generate_Stream(sample_size, area)
+    for i in range(0, iterations):
+        if timing: iter_start = perf_counter()
+        # generate test case.
+        sample_size = Sample_Size(area, 0.05)
+        input_stream = Generate_Stream(sample_size, area)
 
-            # calculate facilities.
-            meyerson = Meyerson_Algorithm_Online(input_stream, costs)
-            q_meyerson = q_Meyerson_Algorithm_Online(q, input_stream, costs)
-            lloyd = Lloyd_Clustering(area, input_stream)
-            if timing: iter_facilities_time = perf_counter()
+        # calculate facilities.
+        if option == "meyerson":
+            test_facilities = Meyerson_Algorithm_Online(input_stream, costs)
+        elif option == "q_meyerson":
+            test_facilities = q_Meyerson_Algorithm_Online(q, input_stream, costs)
+        elif option == "lloyd":
+            test_facilities = Lloyd_Clustering(area, input_stream, iteration=10)
+        else:
+            raise Exception(f"\n\tOption '{option}' is not valid.")
 
-            # calculate costs.
-            costs_meyerson = Calculate_Costs(meyerson, costs)
-            costs_q_meyerson = Calculate_Costs(q_meyerson, costs)
-            costs_lloyd = Calculate_Costs(lloyd, costs)
-            if timing: 
-                print(f"{len(input_stream)}\t{Round(iter_facilities_time - iter_start, 5)}\t\t{Round(perf_counter() - iter_facilities_time, 5)}")
+        if timing: iter_facilities_time = perf_counter()
 
-            # append results
-            results_alg.append([sample_size, [len(meyerson), costs_meyerson], [len(q_meyerson), costs_q_meyerson], [len(lloyd), costs_lloyd]])
+        # calculate costs and append result to results_alg
+        total_costs = Calculate_Costs(test_facilities, costs)
+        results_alg.append([sample_size, [test_facilities, total_costs]])
 
-    elif (option == "meyerson") or (option == "q_meyerson") or (option == "lloyd"):
-        for i in range(0, iterations):
-            # generate test case.
-            sample_size = Sample_Size(area, 0.05)
-            input_stream = Generate_Stream(sample_size, area)
-
-            # calculate facilities.
-            if option == "meyerson":
-                test_facilities = Meyerson_Algorithm_Online(input_stream, costs)
-            elif option == "q_meyerson":
-                test_facilities = q_Meyerson_Algorithm_Online(q, input_stream, costs)
-            elif option == "lloyd":
-                test_facilities = Lloyd_Clustering(area, input_stream, iteration=10)
-
-            # calculate costs and append result to results_alg
-            total_costs = Calculate_Costs(test_facilities, costs)
-            results_alg.append([sample_size, [len(test_facilities), total_costs]])
-    else:
-        raise Exception(f"\n\tOption '{option}' is not valid.")
-
+        if timing:
+            print(f"{len(input_stream)}\t{Round(iter_facilities_time - iter_start, 5)}\t\t{Round(perf_counter() - iter_facilities_time, 5)}")
     # end of test
     end = perf_counter()
     Print_Results(results_alg, option)
-    
+
     print(f"Total time: {end - start} sec for {sum([x[0] for x in results_alg])} Demand points.")
-    print(f"Per Demand point time: {Round((end - start)/sum([x[0] for x in results_alg]), 5)}")
+    print(f"Per Demand point time: {Round((end - start)/sum([x[0] for x in results_alg]), 5)}\n\n")
+    # returns list of list with [#demand, [Facility, cost]]
+    return results_alg
+
+# compares the three algorithms, namely Meyerson, q-meyerson, lloyd
+# returns list consisting of [#demand, [Facility, cost], [Facility, cost], [Facility, cost]]
+def Compare_Algorithms(iterations: int, area: tuple, costs: int, q: float = 0.5, timing: bool = False) -> list:
+    if timing: start = perf_counter()
+    results_alg = []
+    # start of the simulation
+    for i in range(0, iterations):
+        if timing: iter_start = perf_counter()
+        # generate test case.
+        sample_size = Sample_Size(area, 0.05)
+        input_stream = Generate_Stream(sample_size, area)
+
+        # calculate facilities.
+        meyerson = Meyerson_Algorithm_Online(input_stream, costs)
+        q_meyerson = q_Meyerson_Algorithm_Online(q, input_stream, costs)
+        lloyd = Lloyd_Clustering(area, input_stream, iteration=10)
+        if timing: iter_facilities_time = perf_counter()
+
+        # calculate costs.
+        costs_meyerson = Calculate_Costs(meyerson, costs)
+        costs_q_meyerson = Calculate_Costs(q_meyerson, costs)
+        costs_lloyd = Calculate_Costs(lloyd, costs)
+        if timing: 
+            print(f"{len(input_stream)}\t{Round(iter_facilities_time - iter_start, 5)}\t\t{Round(perf_counter() - iter_facilities_time, 5)}")
+
+        # append results
+        results_alg.append([sample_size, [meyerson, costs_meyerson], [q_meyerson, costs_q_meyerson], [lloyd, costs_lloyd]])
+
+    end = perf_counter()
+    Print_Results(results_alg, "all")
+
+    print(f"Total time: {end - start} sec for {sum([x[0] for x in results_alg])} Demand points.")
+    print(f"Per Demand point time: {Round((end - start)/sum([x[0] for x in results_alg]), 5)}\n\n")
+
 
     return results_alg
 
@@ -249,4 +270,5 @@ if __name__ == "__main__":
     #lloyd_result = Draw(test_area, test_stream, test_lloyd, cost_lloyd)
     #lloyd_result.Plot(True)
 
-    Test_Meyerson_Alg(test_iterations, test_area, test_facility_cost, timing = True)
+    Test_Algorithm(test_iterations, test_area, test_facility_cost, "meyerson", timing = True)
+    Compare_Algorithms(test_iterations, test_area, test_facility_cost, timing=True)
