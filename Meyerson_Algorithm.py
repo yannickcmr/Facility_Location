@@ -218,7 +218,7 @@ def Compare_Algorithms(iterations: int, area: tuple, costs: int, q: float = 0.5,
         # calculate facilities.
         meyerson = Meyerson_Algorithm_Online(input_stream, costs)
         q_meyerson = q_Meyerson_Algorithm_Online(q, input_stream, costs)
-        lloyd = Lloyd_Clustering(area, input_stream, iteration=10)
+        lloyd = Lloyd_Clustering(area, input_stream, iteration=7)
         if timing: iter_facilities_time = perf_counter()
 
         # calculate costs.
@@ -237,20 +237,30 @@ def Compare_Algorithms(iterations: int, area: tuple, costs: int, q: float = 0.5,
     print(f"Total time: {end - start} sec for {sum([x[0] for x in results_alg])} Demand points.")
     print(f"Per Demand point time: {Round((end - start)/sum([x[0] for x in results_alg]), 5)}\n\n")
 
-
     return results_alg
+
+
+""" Plot Comparison """
+
+def Plot_Comparison(area: tuple, costs: int, results: list, save: bool = False) -> None:
+    for i, result in enumerate(results):
+        sample_size = result[0]
+        cache = Draw_Comparison(area, costs, sample_size, result[1], result[2], result[3])
+        #cache.Plot()
+        if save:
+            cache.Save(f"Comparison_Alg_{i}")
 
 
 if __name__ == "__main__":
     """ test options """
-    test_area = (100, 100)
+    test_area = (50, 50)
     test_facility_cost = 27
     test_stream_size = 20
     test_q_value = 0.5
-    test_iterations = 10
+    test_iterations = 20
 
     # generate random test stream.
-    test_stream = Generate_Stream(test_stream_size, test_area)
+    #test_stream = Generate_Stream(test_stream_size, test_area)
 
     #print(f"---- Meyerson ----")
     #test_meyerson = Meyerson_Algorithm_Online(test_stream, test_facility_cost)
@@ -268,7 +278,9 @@ if __name__ == "__main__":
     #test_lloyd = Lloyd_Clustering(test_area, test_stream)
     #cost_lloyd = Calculate_Costs(test_lloyd, test_facility_cost)
     #lloyd_result = Draw(test_area, test_stream, test_lloyd, cost_lloyd)
-    #lloyd_result.Plot(True)
+    #lloyd_result.Plot()
 
-    Test_Algorithm(test_iterations, test_area, test_facility_cost, "meyerson", timing = True)
-    Compare_Algorithms(test_iterations, test_area, test_facility_cost, timing=True)
+    #Test_Algorithm(test_iterations, test_area, test_facility_cost, "meyerson", timing = True)
+    test_compare = Compare_Algorithms(test_iterations, test_area, test_facility_cost, timing=True)
+
+    Plot_Comparison(test_area, test_facility_cost, test_compare, True)
