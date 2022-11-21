@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 Save_Path = "Test_Meyerson/"
 
-""" Classes """
+""" Classes Algorithm """
 
 class Demand:
     def __init__(self, pos: tuple) -> None:
@@ -33,6 +33,8 @@ def Get_Service_Connections(facility: Facility) -> tuple:
     y_pos = [(point.position[1], facility.position[1]) for point in facility.service]
     return (x_pos, y_pos)
 
+""" Classes Plot """
+
 class Draw:
     def __init__(self, area: tuple, demands: list, facilites: list, costs: float = 0) -> None:
         self.area = area
@@ -41,16 +43,10 @@ class Draw:
         self.costs = costs
 
     def Generate_Plot(self) -> plt:
-        # formating the title.
-        title_str = f"Area:{self.area}\nDemand:{len(self.demands)} --- Facilities: {len(self.facilities)}"
-        if self.costs > 0: 
-            title_str += f" --- Total Costs: {self.costs}"
-
         # Preparing the plot.
         figure, axes = plt.subplots()
         figure.set_size_inches(10, 7)
         figure.canvas.set_window_title("Facility Location")
-        plt.title(title_str)
         
         axes.set_aspect("equal")
         plt.grid(True, which="both")
@@ -76,15 +72,45 @@ class Draw:
         return plt
 
     def Plot(self) -> None:
-        plt = self.Generate_Plot()
-        plt.show()
+        # formating the title.
+        title_str = f"Area:{self.area}\nDemand:{len(self.demands)} --- Facilities: {len(self.facilities)}"
+        if self.costs > 0: 
+            title_str += f" --- Total Costs: {self.costs}"
+        
+        # generate the plot.
+        plt_self = self.Generate_Plot()
+        plt_self.title(title_str)
+        plt_self.show()
 
 
     def Save(self, file_name: str, dpi: int = 300, format: str = "png") -> None:
+        # formating the save path.
         file_name = f"{file_name}.{format}"
         path = os.path.join(Save_Path, file_name)
-        plt = self.Generate_Plot()
-        plt.savefig(path, dpi = dpi, format = format, bbox_inches = "tight")
+
+        # formating the title.
+        title_str = f"Area:{self.area}\nDemand:{len(self.demands)} --- Facilities: {len(self.facilities)}"
+        if self.costs > 0: 
+            title_str += f" --- Total Costs: {self.costs}"
+
+        # generating the plot.
+        plt_self = self.Generate_Plot()
+        plt_self.title(title_str)
+        plt_self.savefig(path, dpi = dpi, format = format, bbox_inches = "tight")
+
+
+class Draw_Comparison:
+    def __init__(self, area: tuple, meyerson: list, q_meyerson: list, lloyd: list) -> None:
+        self.area = area
+        self.result_1 = meyerson
+        self.result_2 = q_meyerson
+        self.result_3 = lloyd
+    
+    def Plot(self) -> plt:
+        figure, axes = plt.subplots(2 ,2)
+        figure.set_size_inches(10, 7)
+        figure.canvas.set_window_title("Facility Location")
+
 
 """ Functions """
 
@@ -100,15 +126,18 @@ def Generate_Stream(set_size: int, area: tuple) -> list:
 
 if __name__ == "__main__":
     # testing Demand class and generator function.
+    test_area = (10, 10)
     test_demand = Demand((3,4))
-    test_stream = Generate_Stream(3, (5,5))
+    test_stream = Generate_Stream(3, (test_area))
 
     # testing Facility class and method.
     test_facility = Facility((2,3), test_demand)
     for demand in test_stream:
         test_facility.Add_Service(demand)
 
-    # testing Draw class and methods.
-    test_draw = Draw((5,5), [test_demand, *test_stream], [test_facility])
-    test_draw.Plot()
-    test_draw.Save("test_save")
+    #testing Draw class and methods.
+    #test_draw = Draw(test_area, [test_demand, *test_stream], [test_facility])
+    #test_draw.Plot()
+    #test_draw.Save("test_save")
+
+    #test_results = Draw_Results(test_area)
