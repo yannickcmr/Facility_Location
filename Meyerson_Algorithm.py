@@ -1,7 +1,8 @@
 import random as rd
 import numpy as np
 from time import perf_counter
-from Facility_Class import Facility, Demand, Draw, Draw_Comparison, Generate_Stream
+from Facility_Class import Facility, Demand, Generate_Stream
+from Draw_Classes import Draw, Draw_Comparison
 
 """ Helper Functions """
 
