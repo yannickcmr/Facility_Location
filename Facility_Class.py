@@ -1,8 +1,9 @@
 import random as rd
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 
-Save_Path = "Test_Meyerson/"
+Save_Path = "Tests/Test_Meyerson/"
 
 """ Classes Algorithm """
 
@@ -99,18 +100,77 @@ class Draw:
         plt_self.savefig(path, dpi = dpi, format = format, bbox_inches = "tight")
 
 
+def Extract_Demands(result: list) -> list[Demand]:
+    return [demand for facility in result[0] for demand in facility.service]
+
+def Percent(value_1, value_2) -> str:
+    value = str(np.around(value_1/value_2 - 1, decimals=4)).translate({ord("."): None})
+    return f"+{value[1:3]}.{value[3:]}%"
+
 class Draw_Comparison:
-    def __init__(self, area: tuple, meyerson: list, q_meyerson: list, lloyd: list) -> None:
+    def __init__(self, area: tuple, facility_cost: int, sample_size: int, meyerson: list, q_meyerson: list, lloyd: list) -> None:
         self.area = area
+        self.costs = facility_cost
+        self.sample_size = sample_size
         self.result_1 = meyerson
         self.result_2 = q_meyerson
         self.result_3 = lloyd
     
-    def Plot(self) -> plt:
-        figure, axes = plt.subplots(2 ,2)
+    def Generate_Plot(self) -> plt:
+        # Preparing the plot.
+        figure, ((ax_1, ax_2), (ax_3, ax_4)) = plt.subplots(2 ,2)
         figure.set_size_inches(10, 7)
         figure.canvas.set_window_title("Facility Location")
 
+        # generating the plots.
+        axes = [(ax_1, "Meyerson", self.result_1), (ax_2, "q-Meyerson", self.result_2), (ax_3, "Lloyd", self.result_3)]
+        for ax in axes:
+            # format subplot
+            ax[0].set_aspect("auto")
+            ax[0].grid(True, which="both")
+            ax[0].set(xlim=(-1, self.area[0] + 1), ylim=(-1, self.area[1] + 1))
+            ax[0].set_title(ax[1])
+
+            # extract points.
+            x_facilities, y_facilities = Split_Position(ax[2][0])
+            x_demand, y_demand = Split_Position(Extract_Demands(ax[2]))
+
+            ax[0].scatter(x_demand, y_demand , color="black", s=50, zorder=2)
+            ax[0].scatter(x_facilities, y_facilities , color="red", s=50, marker="*", zorder=2)
+
+            for facility in ax[2][0]:
+                # get the coordinates for all the demands served.
+                x_service, y_service = Get_Service_Connections(facility)
+
+                for i in range(0, len(x_service)):
+                    ax[0].plot(x_service[i], y_service[i], color="grey", zorder=-2)
+
+
+        # formating the textbox
+        text_str = "\n".join([f"Area: {self.area}\t Opening Costs:{self.costs}", "",
+                                f"Comparison of {self.sample_size} Demand points", "", 
+                                f"Meyerson:\t{len(self.result_1[0])} Facilities\t{self.result_1[1]} Costs",
+                                f"q-Meyerson:\t{len(self.result_2[0])} Facilities\t{self.result_2[1]} Costs",
+                                f"Lloyd:\t\t\t{len(self.result_3[0])} Facilities\t{self.result_3[1]} Costs", "",
+                                f"Performance:\t{Percent(self.result_1[1], self.result_3[1])}\t\t{Percent(self.result_2[1], self.result_3[1])}"])
+        
+        props = dict(boxstyle='round', facecolor='lightgray', alpha=0.5)
+        ax_4.axis('off')
+        ax_4.text(0, 0.82, text_str.expandtabs(), fontsize=12, verticalalignment='top', horizontalalignment='left', bbox = props)
+
+        return plt
+
+    def Plot(self) -> None:
+        plt_compare = self.Generate_Plot()
+        plt_compare.show()
+
+    def Save(self, file_name: str, dpi: int = 300, format: str = "png") -> None:
+        # formating the save path.
+        file_name = f"{file_name}.{format}"
+        path = os.path.join(Save_Path, file_name)
+
+        plt_compare = self.Generate_Plot()
+        plt_compare.savefig(path, dpi = dpi, format = format, bbox_inches = "tight")
 
 """ Functions """
 
@@ -120,7 +180,7 @@ def Randomize_Demand(area: tuple) -> Demand:
     return Demand(tuple(pos_demand))
 
 # generate set_size many random Demands.
-def Generate_Stream(set_size: int, area: tuple) -> list:
+def Generate_Stream(set_size: int, area: tuple) -> list[Demand]:
     return [Randomize_Demand(area) for i in range(0, set_size)]
 
 
