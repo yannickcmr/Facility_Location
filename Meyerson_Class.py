@@ -47,11 +47,11 @@ if __name__ == "__main__":
     test_demand_size = 21
     test_bias = 0.6
     test_img = "berlin.png"
-    #test_img = "deutschland.png"
+    test_img = "deutschland.png"
 
-    input_stream = Generate_Stream(test_demand_size, test_area)
-    imput_stream_bias = Generate_Bias_Stream(test_demand_size, test_area, test_bias)
-    test_meyerson = Meyerson(test_area, test_facility_cost, test_q)
+    #input_stream = Generate_Stream(test_demand_size, test_area)
+    #input_stream_bias = Generate_Bias_Stream(test_demand_size, test_area, test_bias)
+    #test_meyerson = Meyerson(test_area, test_facility_cost, test_q)
 
-    #Create_Slide_Show(test_meyerson, input_stream)
-    Create_BG_Slides(test_meyerson, imput_stream_bias, test_img)
+    #Create_Basic_Slides(test_meyerson, input_stream)
+    #Create_BG_Slides(test_meyerson, input_stream_bias, test_img)
