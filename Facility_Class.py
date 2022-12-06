@@ -1,6 +1,5 @@
 import random as rd
 import numpy as np
-from Draw_Classes import Draw
 
 """ Classes Algorithm """
 
@@ -49,8 +48,3 @@ if __name__ == "__main__":
     test_facility = Facility((2,3), test_demand)
     for demand in test_stream:
         test_facility.Add_Service(demand)
-
-    #testing Draw class and methods.
-    test_draw = Draw(test_area, [test_demand, *test_stream], [test_facility])
-    test_draw.Plot()
-    test_draw.Save("test_save")
